@@ -5,6 +5,7 @@ import cn.hutool.poi.excel.ExcelWriter;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,6 +16,22 @@ import java.util.stream.Collectors;
  */
 public class HandleFile {
     public static void main(String[] args) {
+        test1119();
+    }
+
+    private static void test1119() {
+        List<String> list=toArrayByFileReader1("E:\\mqc\\project\\some\\src\\main\\resources\\info.2020-01-15.17.log");
+        List<String> list2=toArrayByFileReader1("E:\\mqc\\project\\some\\src\\main\\resources\\info.2020-01-15.18.log");
+        list.addAll(list2);
+        List<String> filterList_S=list.stream().filter(e->e.contains("发出请求-")).map(e->e.split("发出请求-|,",-1)[1]).collect(Collectors.toList());
+        List<String> filterList_R=list.stream().filter(e->e.contains("收到结果-")).map(e->e.split("收到结果-|,",-1)[1]).collect(Collectors.toList());
+        List<String> filterList_R2=list.stream().filter(e->e.contains("收到响应-")).map(e->e.split("收到响应-|,",-1)[1]).collect(Collectors.toList());
+        filterList_S.removeAll(filterList_R);
+        filterList_S.removeAll(filterList_R2);
+        System.out.println();
+    }
+
+    private static void test1503() {
         List<String> list=toArrayByFileReader1("C:\\Users\\Administrator\\Desktop\\xml\\CFCE33202DHg1000B1D_1_g.xml");
         List<String> answerFilter=list.stream().filter(e->e.contains("<answer>"))
                 .map(e->e.replaceAll("<answer>|</answer>","").trim())
@@ -40,7 +57,21 @@ public class HandleFile {
         ExcelWriter excelWriter= ExcelUtil.getWriter("C:\\Users\\Administrator\\Desktop\\xml\\CFCE33202DHg1000B1D_1_g.xlsx");
         excelWriter.write(reviewObjects);
         excelWriter.close();
+    }
 
+    public static void findFileList(File dir, List<String> fileNames) {
+        if (!dir.exists() || !dir.isDirectory()) {// 判断是否存在目录
+            return;
+        }
+        String[] files = dir.list();// 读取目录下的所有目录文件信息
+        for (int i = 0; i < files.length; i++) {// 循环，添加文件名或回调自身
+            File file = new File(dir, files[i]);
+            if (file.isFile()) {// 如果文件
+                fileNames.add(dir + "\\" + file.getName());// 添加文件全路径名
+            } else {// 如果是目录
+                findFileList(file, fileNames);// 回调自身继续查询
+            }
+        }
     }
 
     private static void handleLog3() {
