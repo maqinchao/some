@@ -1,5 +1,8 @@
 package com.mqc.lock;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * @Author Administrator
  * @create 2019/11/13 16:49
@@ -72,4 +75,35 @@ public class SyncronizedTest {
     版权声明：本文为CSDN博主「薛8」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。
     原文链接：https://blog.csdn.net/xueba8/article/details/88753443*/
 
+    public int i=0;
+
+    public synchronized void test1(){
+        i=i+1;
+
+    }
+
+    public synchronized void test2(){
+        i=i+1;
+    }
+
+    public static void main(String[] args) {
+        SyncronizedTest test=new SyncronizedTest();
+        ExecutorService service= Executors.newCachedThreadPool();
+        for(int i=0;i<10000;i++){
+            service.submit(()->{
+                test.test1();
+            });
+        }
+
+        for(int i=0;i<10000;i++){
+            service.submit(()->{
+                test.test2();
+            });
+        }
+        service.shutdown();
+        while (!service.isTerminated()){
+
+        }
+        System.out.println(test.i);
+    }
 }

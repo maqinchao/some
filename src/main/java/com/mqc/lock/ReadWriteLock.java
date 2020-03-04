@@ -1,7 +1,10 @@
 package com.mqc.lock;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -11,8 +14,59 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class ReadWriteLock {
     private static int i=0;
+    private static Map<String,ReentrantReadWriteLock> conditionMap=new ConcurrentHashMap<>();
+    private static Map<String, AtomicInteger> counterMap=new ConcurrentHashMap<>();
     public static void main(String[] args) {
-        ExecutorService service=Executors.newCachedThreadPool();
+        String key1="1";
+        String key2="2";
+
+        //key1加锁
+        putReadLock(key1);
+
+        //key1解锁
+        //t1
+        removeLock(key1);
+
+        //t2
+        putReadLock(key1);
+
+
+
+
+
+    }
+
+    public static ReentrantReadWriteLock putReadLock(String key){
+        ReentrantReadWriteLock lock=new ReentrantReadWriteLock();
+
+        ReentrantReadWriteLock existedLock=conditionMap.putIfAbsent(key,lock);
+        //计数加一
+        if(existedLock==null){
+            lock.readLock().lock();
+        }else{
+            existedLock.readLock().lock();
+        }
+        return existedLock==null?lock:existedLock;
+    }
+
+    public static ReentrantReadWriteLock putWriteLock(String key){
+        ReentrantReadWriteLock lock=new ReentrantReadWriteLock();
+        ReentrantReadWriteLock existedLock=conditionMap.putIfAbsent(key,lock);
+        //计数加一
+        if(existedLock==null){
+            lock.writeLock().lock();
+        }else{
+            existedLock.writeLock().lock();
+        }
+        return existedLock==null?lock:existedLock;
+    }
+
+    public static void removeLock(String key){
+        conditionMap.remove(key);
+    }
+
+    private static void test1() {
+        ExecutorService service= Executors.newCachedThreadPool();
 
         Sync sync=new Sync();
 //        sync.acquire(1);
@@ -30,9 +84,6 @@ public class ReadWriteLock {
 
         }
         System.out.println(i+"");
-
-
-
     }
 }
 
@@ -88,4 +139,9 @@ class Sync extends AbstractQueuedSynchronizer{
                 return nextc == 0;
         }
     }
+}
+
+class MyReadWriteLock extends ReentrantReadWriteLock{
+
+
 }
